@@ -4,7 +4,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script></head><body>
 <nav id="nv" hidden><b>DASHBOARD CULTURE RP V2</b><span class="sp"></span><button class="btn g" id="out">Keluar</button></nav>
 <section id="nf"><h2>404</h2><p>Halaman tidak ditemukan.</p></section>
-<section id="lg" hidden><form id="fl" style="max-width:340px"><label>Email<input name="e" type="email"></label><label>Password<input name="p" type="password"></label><button class="btn">Masuk</button></form></section>
+<section id="lg" hidden><form id="fl" style="max-width:340px"><label>Email<input name="e" type="email"></label><label>Password<input name="p" type="password"></label><button class="btn">Masuk</button><p id="er" style="color:#fca5a5;margin-top:12px;line-height:1.5;word-break:break-all"></p></form></section>
 <main id="mn" hidden>
 <section><h2>Server</h2><div class="row"><div class="card stat"><b id="sp">-</b>Pemain</div><div class="card stat"><b id="sd">-</b>Member Discord</div></div>
 <div class="card" style="margin-top:12px"><b>Pemain di kota</b><table id="pl"></table></div>
@@ -21,9 +21,11 @@
 <section><h2>Pendaftar</h2><div class="card"><table id="ap"></table></div></section></main>
 <script src="config.js"></script><script src="common.js"></script><script>
 const rp=a=>'Rp'+Number(a).toLocaleString('id-ID');
-$('#fl').onsubmit=e=>{e.preventDefault();auth.signInWithEmailAndPassword(e.target.e.value,e.target.p.value).catch(x=>alert(x.message))};$('#out').onclick=()=>auth.signOut();
+const er=t=>$('#er').textContent=t;
+const EM={'auth/invalid-credential':'Email atau password salah, atau akun belum dibuat di Firebase Authentication.','auth/operation-not-allowed':'Aktifkan Email/Password di Firebase > Authentication > Sign-in method.','auth/invalid-api-key':'apiKey di config.js salah.'};
+$('#fl').onsubmit=e=>{e.preventDefault();er('Memproses...');auth.signInWithEmailAndPassword(e.target.e.value,e.target.p.value).catch(x=>er(EM[x.code]||x.code+': '+x.message))};
 function gate(u){$('#mn').hidden=$('#lg').hidden=$('#nv').hidden=true;$('#nf').hidden=false;if(!u){if(location.hash=='#masuk'){$('#lg').hidden=false;$('#nf').hidden=true}return}
- db.doc('admins/'+u.uid).get().then(d=>{if(!d.exists){auth.signOut();return}document.title='Dashboard';$('#nf').hidden=false;$('#nf').hidden=true;$('#mn').hidden=$('#nv').hidden=false;init()})}
+ db.doc('admins/'+u.uid).get().then(x=>{if(!x.exists){er('Login berhasil, tapi akun ini belum jadi admin. Di Firestore buat koleksi "admins" dengan Document ID: '+u.uid);auth.signOut();return}er('');document.title='Dashboard';$('#nf').hidden=true;$('#mn').hidden=$('#nv').hidden=false;init()}).catch(x=>{er('Gagal membaca Firestore ('+x.code+'). Pastikan Firestore Database sudah dibuat dan project ID di config.js benar.');auth.signOut()})}
 auth.onAuthStateChanged(gate);addEventListener('hashchange',()=>{if(!auth.currentUser)gate(null)});
 function init(){lists();
  db.collection('types').onSnapshot(s=>$('#tl').innerHTML=s.docs.map(d=>{const o=d.data().open!==false;return`<div class="card">${d.data().name}<br><button class="btn ${o?'':'g'}" style="margin:8px 0" onclick="tg('types','${d.id}',${o})">${o?'Dibuka':'Ditutup'}</button><br><a href="#" onclick="rm('types','${d.id}');rm('secrets','${d.id}');return false">hapus</a></div>`}).join(''));
@@ -46,5 +48,5 @@ add('#fb','blacklist',()=>({ts:Date.now()}));add('#fm','team');add('#fq','partne
 const lst=(col,el,f)=>db.collection(col).onSnapshot(s=>$(el).innerHTML=s.docs.map(x=>f(x.data(),`<a href="#" onclick="rm('${col}','${x.id}');return false">hapus</a>`)).join(''));
 function lists(){lst('blacklist','#bl',(b,x)=>`<tr><td>${b.name}</td><td>${b.reason}</td><td>${x}</td></tr>`);lst('team','#tmL',(m,x)=>`<div class="card">${m.name}<br>${m.role}<br>${x}</div>`);lst('partners','#pq',(p,x)=>`<div class="card">${p.name}<br>${x}</div>`)}
 const fc=$('#fc');const fill=()=>db.doc('content/'+fc.k.value).get().then(x=>{const v=x.exists?x.data():DEF[fc.k.value];fc.t.value=v.title;fc.b.value=v.body});
-fc.k.onchange=fill;fill();fc.onsubmit=async e=>{e.preventDefault();await db.doc('content/'+fc.k.value).set({title:fc.t.value,body:fc.b.value});alert('Tersimpan')};
+fc.k.onchange=fill;fill().catch(()=>{});fc.onsubmit=async e=>{e.preventDefault();await db.doc('content/'+fc.k.value).set({title:fc.t.value,body:fc.b.value});alert('Tersimpan')};
 </script></body></html>

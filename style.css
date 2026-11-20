@@ -53,3 +53,5 @@ dialog{color:#fff;margin:auto;width:min(380px,92vw)}dialog::backdrop{background:
 
 .wb{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left}.st{font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap}
 .st.on{background:#22c55e33;color:#86efac}.st.off{background:#ef444433;color:#fca5a5}.cl{opacity:.6;cursor:not-allowed;background:#2a1d44}.cl:hover{transform:none;box-shadow:none}
+
+[hidden]{display:none!important}
